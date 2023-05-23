@@ -29,14 +29,24 @@ def iniciar_driver():
 driver = iniciar_driver()
 driver.get('https://telefonesimportados.netlify.app')
 sleep(3)
-# driver.execute_script("window.scrollTo(0, 300);")
-# sleep(2)
+
+proxima_pagina = driver.find_element(By.XPATH,"//li/a[@aria-label='Next']")
+
+while True:
+
+    if proxima_pagina != '':
+
+        for i in range(12):
+            nomes = driver.find_elements(By.XPATH,'//div//h2/a')
+            nome = print(nomes[i].text)
+            precos = driver.find_elements(By.XPATH,"//div[@class='product-carousel-price']/ins")
+            preco = print(precos[i].text.split('$')[1])
+            sleep(2)
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
+        proxima_pagina.click()
+        sleep(5)
 
 
-nomes = driver.find_elements(By.XPATH,'//div//h2/a')
-nome = nomes[0].text
-precos = driver.find_elements(By.XPATH,"//div[@class='product-carousel-price']/ins")
-preco = precos[0].text.split('$')[1]
 
 
 
