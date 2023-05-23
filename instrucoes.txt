@@ -1,0 +1,9 @@
+1 - Conectar no site  https://telefonesimportados.netlify.app  e selecionar o nome do celular e o preço em todas as páginas
+
+
+2 - Salvar  os dados em uma planilha 
+
+
+
+
+3 - enviar a planilha poe e-mail
