@@ -18,22 +18,16 @@ del workbook['Sheet']
 sheet_celulares = workbook['Celulares']
 sheet_celulares.append(['Celular','Preço'])
 
-
-# Montagem do e-mail
-EMAIL_ADDRESS_SEND = input('Digite para qual e-mail a planilha deve ser encaminhada: ')
-
-EMAIL_ADDRESS = 'carlosrodriguesjfprojetos@gmail.com'
-EMAIL_PASSWORD = 'kkoabxdhtyucdmql'
-
-mail = EmailMessage()
-mail['Subject'] = 'Seu relatório de preços'
-mensagem = 'Baixe seu relatório de preços de celular agora!'
-
-mail['From'] = EMAIL_ADDRESS
-mail['To'] = EMAIL_ADDRESS_SEND
-mail.add_header('Content-Type', 'text/html')
-mail.set_payload(mensagem.encode('ISO-8859-1'))
-
+def varre_pagina(proxima_pagina,nomes,precos):
+    proxima_pagina = driver.find_element(By.XPATH,"//li/a[@aria-label='Next']")
+    nomes = driver.find_elements(By.XPATH,'//div//h2/a')
+    precos = driver.find_elements(By.XPATH,"//div[@class='product-carousel-price']/ins")
+    nome = nomes[i].text
+    preco = precos[i].text.split('$')[1]
+    sheet_celulares.append([nome,preco])
+    print('Guardando valores da página atual...')
+    sleep(1)
+    return proxima_pagina,nome,preco
 
 
 
@@ -66,47 +60,25 @@ proxima_pagina = driver.find_element(By.XPATH,"//li/a[@aria-label='Next']")
 nomes = driver.find_elements(By.XPATH,'//div//h2/a')
 precos = driver.find_elements(By.XPATH,"//div[@class='product-carousel-price']/ins")
 
-while True:
-    
+while proxima_pagina:
+
     driver.execute_script("window.scrollTo(0, 1200);")
     for i in range(0,len(nomes)):
-        proxima_pagina = driver.find_element(By.XPATH,"//li/a[@aria-label='Next']")
-        nomes = driver.find_elements(By.XPATH,'//div//h2/a')
-        precos = driver.find_elements(By.XPATH,"//div[@class='product-carousel-price']/ins")
-        nome = nomes[i].text
-        preco = precos[i].text.split('$')[1]
-        sheet_celulares.append([nome,preco])
-        print('Guardando valores da página atual...')
-        sleep(1)
+        proxima_pagina, teste1, teste2 = varre_pagina(proxima_pagina,nomes,precos)
     driver.execute_script("window.scrollTo(0, 1200);")
     sleep(3)
     print('\nIndo para a próxima página\n')
+    sleep(2)
+    nomes = driver.find_elements(By.XPATH,'//div//h2/a')
+    precos = driver.find_elements(By.XPATH,"//div[@class='product-carousel-price']/ins")
+    nome = nomes[i].text
+    preco = precos[i].text.split('$')[1]
+    sheet_celulares.append([nome,preco])
+    sleep(1)
     proxima_pagina.click()
-    sleep(3)
+
+    
 
 
-    workbook.save('valores_celulares_importados.xlsx')
-    print('Enviando e-mail...')
-
-    arquivos = ['valores_celulares_importados.xlsx']
-
-    for arquivo in arquivos:
-        with open(arquivo, 'rb') as arquivo:
-            dados = arquivo.read()
-            nome_arquivo = arquivo.name
-            mail.add_attachment(dados, maintype='application',
-                                subtype='octet-stream', filename='valores_celulares_importados.xlsx')
-
-
-    with smtplib.SMTP_SSL('smtp.gmail.com',465) as email:
-        email.login(EMAIL_ADDRESS,EMAIL_PASSWORD)
-        email.send_message(mail)
-
-
-
-    print('E-mail enviado com sucesso...')
-    break
 
 driver.close()
-
-
