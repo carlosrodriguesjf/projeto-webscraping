@@ -1,4 +1,4 @@
-
+# PROJETO 3 - VARREDURA DE SITE E-COMMERCE + ARMAZENAMENTO EM PLANILHA - WEB SCRAPING
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -6,10 +6,37 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from time import sleep
+import openpyxl
+import smtplib
+from email.message import EmailMessage
+
+
+# Montagem da planilha
+workbook = openpyxl.Workbook()
+workbook.create_sheet('Celulares')
+del workbook['Sheet']
+sheet_celulares = workbook['Celulares']
+sheet_celulares.append(['Celular','Preço'])
+
+
+# Montagem do e-mail
+EMAIL_ADDRESS = 'carlosrodriguesjfdsa@gmail.com'
+EMAIL_PASSWORD = 'lzqgaocmcnimvozb'
+
+mail = EmailMessage()
+mail['Subject'] = 'Seu relatório de preços'
+mensagem = 'Baixe seu relatório de preços de celular agora!'
+
+mail['From'] = EMAIL_ADDRESS
+mail['To'] = 'carlosrodriguesjf@gmail.com'
+mail.add_header('Content-Type', 'text/html')
+mail.set_payload(mensagem.encode('ISO-8859-1'))
+
+
 
 def iniciar_driver():
     chrome_options = Options()
-    arguments = ['--lang=pt-BR', '--window-size=1200,920', '--incognito']
+    arguments = ['--lang=pt-BR', '--window-size=1420,820', '--incognito']
     for argument in arguments:
         chrome_options.add_argument(argument)
 
@@ -24,96 +51,59 @@ def iniciar_driver():
 
     return driver
 
-# 1 - Conectar no site  https://telefonesimportados.netlify.app  e selecionar o nome do celular e o preço em todas as páginas
+
+
+# 1 - Conectar no site https://telefonesimportados.netlify.app  e selecionar o nome do celular e o preço em todas as páginas
 
 driver = iniciar_driver()
 driver.get('https://telefonesimportados.netlify.app')
 sleep(3)
 
 proxima_pagina = driver.find_element(By.XPATH,"//li/a[@aria-label='Next']")
+nomes = driver.find_elements(By.XPATH,'//div//h2/a')
+precos = driver.find_elements(By.XPATH,"//div[@class='product-carousel-price']/ins")
 
 while True:
-
-    if proxima_pagina != '':
-
-        for i in range(12):
+    try:
+        driver.execute_script("window.scrollTo(0, 1200);")
+        for i in range(0,len(nomes)):
+            proxima_pagina = driver.find_element(By.XPATH,"//li/a[@aria-label='Next']")
             nomes = driver.find_elements(By.XPATH,'//div//h2/a')
-            nome = print(nomes[i].text)
             precos = driver.find_elements(By.XPATH,"//div[@class='product-carousel-price']/ins")
-            preco = print(precos[i].text.split('$')[1])
-            sleep(2)
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
+            nome = nomes[i].text
+            preco = precos[i].text.split('$')[1]
+            sheet_celulares.append([nome,preco])
+            print('Guardando valores da página atual...')
+            sleep(1)
+        driver.execute_script("window.scrollTo(0, 1200);")
+        sleep(3)
+        print('\nIndo para a próxima página\n')
         proxima_pagina.click()
-        sleep(5)
+        sleep(3)
 
+    except:
+        workbook.save('valores_celulares_importados.xlsx')
+        print('Enviando e-mail...')
 
+        arquivos = ['valores_celulares_importados.xlsx']
 
+        for arquivo in arquivos:
+            with open(arquivo, 'rb') as arquivo:
+                dados = arquivo.read()
+                nome_arquivo = arquivo.name
+                mail.add_attachment(dados, maintype='application',
+                                    subtype='octet-stream', filename='valores_celulares_importados.xlsx')
 
 
+        with smtplib.SMTP_SSL('smtp.gmail.com',465) as email:
+            email.login(EMAIL_ADDRESS,EMAIL_PASSWORD)
+            email.send_message(mail)
 
 
 
+        print('E-mail enviado com sucesso...')
+        break
 
+driver.close()
 
 
-
-
-input('tecle algo para fechar')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#2 - Salvar  os dados em uma planilha 
-
-
-
-
-#3 - enviar a planilha poe e-mail
