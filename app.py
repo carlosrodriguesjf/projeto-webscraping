@@ -16,7 +16,7 @@ workbook = openpyxl.Workbook()
 workbook.create_sheet('Celulares')
 del workbook['Sheet']
 sheet_celulares = workbook['Celulares']
-sheet_celulares.append(['Celular','Preço'])
+sheet_celulares.append(['Marca','Preço'])
 
 
 # Montagem do e-mail
@@ -55,9 +55,6 @@ def iniciar_driver():
     return driver
 
 
-
-# 1 - Conectar no site https://telefonesimportados.netlify.app  e selecionar o nome do celular e o preço em todas as páginas
-
 driver = iniciar_driver()
 driver.get('https://telefonesimportados.netlify.app')
 sleep(3)
@@ -67,45 +64,43 @@ nomes = driver.find_elements(By.XPATH,'//div//h2/a')
 precos = driver.find_elements(By.XPATH,"//div[@class='product-carousel-price']/ins")
 
 while True:
-    
-    driver.execute_script("window.scrollTo(0, 1200);")
-    for i in range(0,len(nomes)):
-        proxima_pagina = driver.find_element(By.XPATH,"//li/a[@aria-label='Next']")
-        nomes = driver.find_elements(By.XPATH,'//div//h2/a')
-        precos = driver.find_elements(By.XPATH,"//div[@class='product-carousel-price']/ins")
-        nome = nomes[i].text
-        preco = precos[i].text.split('$')[1]
-        sheet_celulares.append([nome,preco])
-        print('Guardando valores da página atual...')
+    try:                                        
+        driver.execute_script("window.scrollTo(0, 1200);")
+        for i in range(0,len(nomes)):
+            nomes = driver.find_elements(By.XPATH,'//div//h2/a')
+            precos = driver.find_elements(By.XPATH,"//div[@class='product-carousel-price']/ins")
+            nome = nomes[i].text
+            preco = precos[i].text.split('$')[1]
+            sheet_celulares.append([nome,preco])
+            print('Guardando valores da página atual...')
+            sleep(2)       
         sleep(1)
-    driver.execute_script("window.scrollTo(0, 1200);")
-    sleep(3)
-    print('\nIndo para a próxima página\n')
-    proxima_pagina.click()
-    sleep(3)
+        proxima_pagina = driver.find_element(By.XPATH,"//li/a[@aria-label='Next']")
+        proxima_pagina.click()
+        print('\nIndo para a próxima página\n')
+    except:   
+        break
 
 
-    workbook.save('valores_celulares_importados.xlsx')
-    print('Enviando e-mail...')
+workbook.save('valores_celulares_importados.xlsx')
+print('Enviando e-mail...')
 
-    arquivos = ['valores_celulares_importados.xlsx']
+arquivos = ['valores_celulares_importados.xlsx']
 
-    for arquivo in arquivos:
-        with open(arquivo, 'rb') as arquivo:
-            dados = arquivo.read()
-            nome_arquivo = arquivo.name
-            mail.add_attachment(dados, maintype='application',
-                                subtype='octet-stream', filename='valores_celulares_importados.xlsx')
+for arquivo in arquivos:
+    with open(arquivo, 'rb') as arquivo:
+        dados = arquivo.read()
+        nome_arquivo = arquivo.name
+        mail.add_attachment(dados, maintype='application',
+                            subtype='octet-stream', filename='valores_celulares_importados.xlsx')
 
 
-    with smtplib.SMTP_SSL('smtp.gmail.com',465) as email:
-        email.login(EMAIL_ADDRESS,EMAIL_PASSWORD)
-        email.send_message(mail)
-
+with smtplib.SMTP_SSL('smtp.gmail.com',465) as email:
+    email.login(EMAIL_ADDRESS,EMAIL_PASSWORD)
+    email.send_message(mail)
 
 
     print('E-mail enviado com sucesso...')
-    break
 
 driver.close()
 

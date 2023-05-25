@@ -15,7 +15,7 @@ from email.message import EmailMessage
 
 def iniciar_driver():
     chrome_options = Options()
-    arguments = ['--lang=pt-BR', '--window-size=1420,820', '--incognito']
+    arguments = ['--lang=pt-BR', '--window-size=1420,900', '--incognito']
     for argument in arguments:
         chrome_options.add_argument(argument)
 
@@ -43,31 +43,27 @@ nomes = driver.find_elements(By.XPATH,'//div//h2/a')
 precos = driver.find_elements(By.XPATH,"//div[@class='product-carousel-price']/ins")
 
 while True:
-    driver.execute_script("window.scrollTo(0, 1200);")
-    for i in range(0,len(nomes)):
-        try:
-            proxima_pagina = driver.find_element(By.XPATH,"//li/a[@aria-label='Next']")
+    try:                                        
+        driver.execute_script("window.scrollTo(0, 1200);")
+        for i in range(0,len(nomes)):
             nomes = driver.find_elements(By.XPATH,'//div//h2/a')
             precos = driver.find_elements(By.XPATH,"//div[@class='product-carousel-price']/ins")
             nome = nomes[i].text
             preco = precos[i].text.split('$')[1]
+            sheet_celulares.append([nome,preco])
             print('Guardando valores da página atual...')
-            sleep(2)
-        except:
-            proxima_pagina = driver.find_element(By.XPATH,"//li/a[@aria-label='Next']")
-        finally:
-            nomes = driver.find_elements(By.XPATH,'//div//h2/a')
-            precos = driver.find_elements(By.XPATH,"//div[@class='product-carousel-price']/ins")
-            nome = nomes[i].text
-            preco = precos[i].text.split('$')[1]
-    print('\nIndo para a próxima página\n')
-    proxima_pagina.click()
-    sleep(1)
-    driver.execute_script("window.scrollTo(0, 1200);")
+            sleep(2)       
+        sleep(1)
+        proxima_pagina = driver.find_element(By.XPATH,"//li/a[@aria-label='Next']")
+        proxima_pagina.click()
+        print('\nIndo para a próxima página\n')
+    except:   
+        break
+        
+        
+print('FIM DO PROGRAMA')       
 
-    print('Fim do programa')
-    break
-    sleep(5)
+
 
   
 driver.close()
